@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EasyHost — Deploy em segundos</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #000;
+    --bg-1: #0a0a0a;
+    --bg-2: #111;
+    --bg-3: #1a1a1a;
+    --bg-4: #222;
+    --border: rgba(255,255,255,0.08);
+    --border-hover: rgba(255,255,255,0.16);
+    --text: #fff;
+    --text-2: rgba(255,255,255,0.6);
+    --text-3: rgba(255,255,255,0.3);
+    --accent: #7c6fff;
+    --accent-2: #a78bfa;
+    --accent-dim: rgba(124,111,255,0.12);
+    --accent-border: rgba(124,111,255,0.3);
+    --green: #22c55e;
+    --green-dim: rgba(34,197,94,0.1);
+    --red: #ef4444;
+    --red-dim: rgba(239,68,68,0.1);
+    --amber: #f59e0b;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+    --font: 'Space Grotesk', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.5; }
+
+  /* NAV */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; height: 56px;
+    background: rgba(0,0,0,0.9); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo { display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 600; letter-spacing: -0.3px; text-decoration: none; color: var(--text); }
+  .logo-mark {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: linear-gradient(135deg, var(--accent) 0%, #a855f7 100%);
+    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;
+  }
+  .nav-tabs { display: flex; gap: 2px; }
+  .nav-tab { padding: 6px 14px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text-2); border: none; background: transparent; transition: all .15s; font-family: var(--font); }
+  .nav-tab:hover { color: var(--text); background: var(--bg-3); }
+  .nav-tab.active { color: var(--text); background: var(--bg-3); }
+  .badge-count { background: var(--accent-dim); color: var(--accent-2); border: 1px solid var(--accent-border); padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; font-family: var(--mono); }
+
+  main { padding: 32px 28px; max-width: 1100px; margin: 0 auto; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* UPLOAD PAGE */
+  .upload-hero { text-align: center; padding: 40px 0 32px; }
+  .upload-hero h1 { font-size: 36px; font-weight: 700; letter-spacing: -1px; line-height: 1.15; }
+  .upload-hero h1 span { background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .upload-hero p { color: var(--text-2); margin-top: 10px; font-size: 15px; }
+
+  .drop-zone {
+    border: 1.5px dashed var(--border-hover); border-radius: var(--radius-xl);
+    padding: 56px 32px; text-align: center; cursor: pointer; transition: all .2s;
+    background: var(--bg-1); position: relative; overflow: hidden;
+  }
+  .drop-zone::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(124,111,255,0.06) 0%, transparent 70%); pointer-events: none; }
+  .drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent-border); background: rgba(124,111,255,0.04); }
+  .drop-icon { font-size: 40px; margin-bottom: 16px; display: block; }
+  .drop-zone h3 { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+  .drop-zone p { color: var(--text-2); font-size: 13px; }
+  .file-types { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+  .file-type { padding: 4px 10px; border-radius: 6px; background: var(--bg-3); border: 1px solid var(--border); font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+  #file-input { display: none; }
+
+  .or-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--text-3); font-size: 12px; }
+  .or-divider::before, .or-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .html-editor { background: var(--bg-1); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  .editor-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--bg-2); }
+  .editor-dots { display: flex; gap: 6px; }
+  .editor-dots span { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #ff5f57; } .dot-y { background: #febc2e; } .dot-g { background: #28c840; }
+  .editor-label { font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+  #html-input { width: 100%; background: transparent; border: none; outline: none; padding: 16px; font-family: var(--mono); font-size: 12px; line-height: 1.7; color: #e2e8f0; resize: vertical; min-height: 180px; }
+
+  .deploy-section { margin-top: 20px; display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+  .project-name-wrap { flex: 1; min-width: 200px; }
+  .project-name-wrap label { display: block; font-size: 12px; color: var(--text-2); margin-bottom: 6px; font-weight: 500; }
+  .input-group { display: flex; align-items: center; background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .input-prefix { padding: 0 10px; font-family: var(--mono); font-size: 11px; color: var(--text-3); border-right: 1px solid var(--border); height: 40px; display: flex; align-items: center; }
+  .input-group input { flex: 1; background: transparent; border: none; outline: none; padding: 0 10px; height: 40px; color: var(--text); font-family: var(--mono); font-size: 12px; }
+  .input-group:focus-within { border-color: var(--accent-border); }
+
+  .btn { height: 40px; padding: 0 20px; border-radius: var(--radius); border: none; cursor: pointer; font-family: var(--font); font-size: 13px; font-weight: 600; transition: all .15s; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover:not(:disabled) { background: #6a5cf0; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-ghost { background: var(--bg-2); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--bg-3); border-color: var(--border-hover); }
+  .btn-sm { height: 32px; padding: 0 12px; font-size: 12px; }
+  .btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+  .btn-danger:hover { background: rgba(239,68,68,0.2); }
+
+  /* SUCCESS CARD */
+  .success-card { background: var(--bg-1); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 28px; margin-top: 24px; display: none; }
+  .success-card.visible { display: block; animation: fadeUp .3s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .success-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .success-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .success-header span { font-size: 13px; font-weight: 500; color: var(--green); }
+  .url-display { background: var(--bg-3); border: 1px solid var(--accent-border); border-radius: var(--radius); padding: 12px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .url-display a { font-family: var(--mono); font-size: 13px; color: var(--accent-2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
+  .url-display a:hover { text-decoration: underline; }
+  .copy-btn { background: var(--bg-4); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; color: var(--text-2); cursor: pointer; font-size: 11px; font-family: var(--mono); white-space: nowrap; transition: all .15s; }
+  .copy-btn:hover { color: var(--text); border-color: var(--border-hover); }
+  .deploy-meta { display: flex; gap: 16px; flex-wrap: wrap; }
+  .meta-item { font-size: 12px; color: var(--text-3); }
+  .meta-item span { color: var(--text-2); }
+  .ai-report { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-top: 16px; }
+  .ai-report-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 12px; font-weight: 500; }
+  .ai-badge { background: var(--accent-dim); color: var(--accent-2); border: 1px solid var(--accent-border); padding: 2px 8px; border-radius: 20px; font-size: 10px; }
+  .ai-fixes { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .ai-fix { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--text-2); }
+  .fix-check { color: var(--green); flex-shrink: 0; }
+
+  /* PROJECTS PAGE */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+  .stat-card { background: var(--bg-1); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; }
+  .stat-label { font-size: 11px; color: var(--text-3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .stat-value { font-size: 26px; font-weight: 700; font-family: var(--mono); letter-spacing: -1px; }
+  .stat-sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+  .stat-up { color: var(--green); }
+  .projects-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .projects-header h2 { font-size: 20px; font-weight: 600; }
+  .project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+  .project-card { background: var(--bg-1); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; transition: all .2s; }
+  .project-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+  .project-preview { height: 120px; background: var(--bg-3); position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .preview-icon { font-size: 28px; }
+  .preview-slug { font-size: 11px; font-family: var(--mono); color: var(--text-3); }
+  .preview-badge { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; font-size: 10px; font-family: var(--mono); color: var(--text-2); }
+  .project-info { padding: 14px 16px; }
+  .project-name-row { font-size: 14px; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; }
+  .live-badge { font-size: 10px; padding: 2px 7px; border-radius: 20px; background: var(--green-dim); color: var(--green); font-weight: 500; }
+  .project-url-link { font-family: var(--mono); font-size: 11px; color: var(--accent-2); margin-bottom: 12px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
+  .project-url-link:hover { text-decoration: underline; }
+  .project-footer { display: flex; justify-content: space-between; align-items: center; }
+  .project-date { font-size: 11px; color: var(--text-3); }
+  .project-actions { display: flex; gap: 6px; }
+  .icon-btn { width: 28px; height: 28px; border-radius: 6px; background: var(--bg-3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; font-size: 12px; color: var(--text-2); }
+  .icon-btn:hover { background: var(--bg-4); border-color: var(--border-hover); color: var(--text); }
+  .icon-btn.danger:hover { background: var(--red-dim); border-color: rgba(239,68,68,.3); color: var(--red); }
+
+  /* PROCESSING */
+  .processing-modal { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.8); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; }
+  .processing-modal.visible { display: flex; }
+  .processing-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 36px 40px; width: 400px; text-align: center; }
+  .processing-spinner { width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--border); border-top-color: var(--accent); animation: spin .8s linear infinite; margin: 0 auto 20px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .processing-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .processing-card p { color: var(--text-2); font-size: 13px; }
+  .steps-list { list-style: none; margin-top: 20px; text-align: left; }
+  .step-item { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 13px; color: var(--text-3); border-bottom: 1px solid var(--border); }
+  .step-item:last-child { border-bottom: none; }
+  .step-item.done { color: var(--text-2); }
+  .step-item.active { color: var(--text); }
+  .step-icon { width: 16px; height: 16px; border-radius: 50%; background: var(--bg-3); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; }
+  .step-item.done .step-icon { background: var(--green-dim); color: var(--green); }
+  .step-item.active .step-icon { background: var(--accent-dim); border: 1px solid var(--accent-border); }
+
+  /* PREVIEW MODAL */
+  .preview-modal { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,.9); backdrop-filter: blur(8px); display: none; flex-direction: column; }
+  .preview-modal.visible { display: flex; }
+  .preview-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid var(--border); background: var(--bg-1); flex-shrink: 0; }
+  .preview-url-bar { flex: 1; margin: 0 16px; background: var(--bg-3); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-family: var(--mono); font-size: 12px; color: var(--text-2); display: flex; align-items: center; gap: 8px; }
+  .preview-frame { flex: 1; border: none; background: white; }
+  .close-btn { width: 32px; height: 32px; border-radius: 8px; background: var(--bg-3); border: 1px solid var(--border); color: var(--text-2); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+  .close-btn:hover { background: var(--red-dim); color: var(--red); border-color: rgba(239,68,68,.3); }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 80px 20px; }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-state h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+  .empty-state p { color: var(--text-2); font-size: 14px; margin-bottom: 20px; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; font-size: 13px; color: var(--text); transform: translateY(20px); opacity: 0; transition: all .25s; display: flex; align-items: center; gap: 8px; min-width: 240px; box-shadow: 0 4px 24px rgba(0,0,0,.4); }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast-icon { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ERROR STATE */
+  .error-banner { background: var(--red-dim); border: 1px solid rgba(239,68,68,.2); border-radius: var(--radius); padding: 12px 16px; margin-top: 16px; font-size: 13px; color: var(--red); display: none; }
+  .error-banner.visible { display: block; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 3px; }
+
+  @media (max-width: 700px) {
+    main { padding: 20px 16px; }
+    nav { padding: 0 16px; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .upload-hero h1 { font-size: 26px; }
+    .deploy-section { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="#">
+    <div class="logo-mark">E</div>
+    EasyHost
+  </a>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('upload')">Deploy</button>
+    <button class="nav-tab" onclick="showPage('projects')">Projetos</button>
+  </div>
+  <div>
+    <span class="badge-count" id="proj-count">0 sites</span>
+  </div>
+</nav>
+
+<main>
+
+  <!-- UPLOAD PAGE -->
+  <div class="page active" id="page-upload">
+    <div class="upload-hero">
+      <h1>Deploy em <span>segundos</span>.<br>Sem configuração.</h1>
+      <p>Envie seu HTML e receba um link público instantaneamente. IA otimiza automaticamente.</p>
+    </div>
+
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+      <span class="drop-icon">⬆</span>
+      <h3>Arraste seu arquivo aqui</h3>
+      <p>ou clique para selecionar do seu computador</p>
+      <div class="file-types">
+        <span class="file-type">.html</span>
+        <span class="file-type">.htm</span>
+        <span class="file-type">.zip</span>
+        <span class="file-type">.css</span>
+        <span class="file-type">.js</span>
+      </div>
+      <input type="file" id="file-input" accept=".html,.htm,.zip,.css,.js" multiple>
+    </div>
+
+    <div class="or-divider">ou cole o código diretamente</div>
+
+    <div class="html-editor">
+      <div class="editor-header">
+        <div class="editor-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="editor-label">index.html</span>
+      </div>
+      <textarea id="html-input" placeholder="<!DOCTYPE html>
+<html>
+  <head><title>Meu Site</title></head>
+  <body>
+    <h1>Olá, mundo!</h1>
+  </body>
+</html>"></textarea>
+    </div>
+
+    <div class="deploy-section">
+      <div class="project-name-wrap">
+        <label>Nome do projeto</label>
+        <div class="input-group">
+          <span class="input-prefix" id="base-url-prefix">localhost:3001/s/</span>
+          <input type="text" id="proj-name" placeholder="meu-site" value="meu-site">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="previewDirect()">👁 Preview</button>
+        <button class="btn btn-primary" id="deploy-btn" onclick="startDeploy()">🚀 Deploy agora</button>
+      </div>
+    </div>
+
+    <div class="error-banner" id="error-banner"></div>
+
+    <div class="success-card" id="success-card">
+      <div class="success-header">
+        <div class="success-dot"></div>
+        <span>Site publicado com sucesso</span>
+      </div>
+      <div class="url-display">
+        <a href="#" id="deployed-url-link" target="_blank">—</a>
+        <button class="copy-btn" onclick="copyUrl()">Copiar</button>
+      </div>
+      <div class="deploy-meta">
+        <div class="meta-item">Tamanho: <span id="meta-size">—</span></div>
+        <div class="meta-item">Deploy: <span id="meta-time">—</span></div>
+        <div class="meta-item">Status: <span style="color:var(--green)">Online ●</span></div>
+      </div>
+      <div class="ai-report" id="ai-report">
+        <div class="ai-report-header">
+          <span class="ai-badge">IA</span>
+          Otimizações aplicadas automaticamente
+        </div>
+        <ul class="ai-fixes" id="ai-fixes-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROJECTS PAGE -->
+  <div class="page" id="page-projects">
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total de sites</div>
+        <div class="stat-value" id="stat-total">—</div>
+        <div class="stat-sub">projetos publicados</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Online agora</div>
+        <div class="stat-value stat-up" id="stat-live">—</div>
+        <div class="stat-sub">disponíveis</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Otimizações IA</div>
+        <div class="stat-value" id="stat-fixes">—</div>
+        <div class="stat-sub">correções automáticas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Armazenamento</div>
+        <div class="stat-value" id="stat-storage">—</div>
+        <div class="stat-sub">utilizado</div>
+      </div>
+    </div>
+
+    <div class="projects-header">
+      <h2>Meus Projetos</h2>
+      <button class="btn btn-primary btn-sm" onclick="showPage('upload')">+ Novo deploy</button>
+    </div>
+    <div id="projects-grid" class="project-grid"></div>
+  </div>
+
+</main>
+
+<!-- Processing Modal -->
+<div class="processing-modal" id="processing-modal">
+  <div class="processing-card">
+    <div class="processing-spinner"></div>
+    <h3>Publicando seu site</h3>
+    <p>A IA está analisando e otimizando seu HTML...</p>
+    <ul class="steps-list" id="steps-list">
+      <li class="step-item" data-step="0"><div class="step-icon">•</div>Lendo arquivo HTML</li>
+      <li class="step-item" data-step="1"><div class="step-icon">•</div>Analisando estrutura</li>
+      <li class="step-item" data-step="2"><div class="step-icon">•</div>Detectando problemas</li>
+      <li class="step-item" data-step="3"><div class="step-icon">•</div>Aplicando responsividade</li>
+      <li class="step-item" data-step="4"><div class="step-icon">•</div>Publicando no servidor</li>
+      <li class="step-item" data-step="5"><div class="step-icon">•</div>Gerando URL única</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="preview-modal" id="preview-modal">
+  <div class="preview-toolbar">
+    <button class="close-btn" onclick="closePreview()">✕</button>
+    <div class="preview-url-bar">
+      <span style="color:var(--green);font-size:10px">●</span>
+      <span id="preview-url-text">pré-visualização local</span>
+    </div>
+    <div style="font-size:12px;color:var(--text-3)">Preview</div>
+  </div>
+  <iframe id="preview-frame" class="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <div class="toast-icon" id="toast-icon"></div>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+// ── Config ────────────────────────────────────────────────
+const API_BASE = window.location.origin + '/api';
+
+// ── Page switching ────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    const text = t.textContent.toLowerCase();
+    if ((name === 'upload' && text.includes('deploy')) || (name === 'projects' && text.includes('proj'))) {
+      t.classList.add('active');
+    }
+  });
+  if (name === 'projects') loadProjects();
+}
+
+// ── File handling ─────────────────────────────────────────
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+let uploadedFiles = null;
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  if (e.dataTransfer.files.length) setFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', e => { if (e.target.files.length) setFiles(e.target.files); });
+
+function setFiles(files) {
+  uploadedFiles = files;
+  const names = Array.from(files).map(f => f.name).join(', ');
+  dropZone.querySelector('h3').textContent = `${files.length} arquivo(s) carregado(s)`;
+  dropZone.querySelector('p').textContent = names;
+  dropZone.style.borderColor = 'var(--accent-border)';
+
+  // If single HTML, also fill the editor
+  if (files.length === 1 && (files[0].name.endsWith('.html') || files[0].name.endsWith('.htm'))) {
+    const reader = new FileReader();
+    reader.onload = e => { document.getElementById('html-input').value = e.target.result; };
+    reader.readAsText(files[0]);
+    const nameParts = files[0].name.split('.');
+    nameParts.pop();
+    document.getElementById('proj-name').value = slugify(nameParts.join('-'));
+  }
+  showToast(`${files.length} arquivo(s) pronto(s) para deploy`, 'green');
+}
+
+function slugify(text) {
+  return (text || 'meu-site').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50) || 'site';
+}
+
+// ── Deploy ────────────────────────────────────────────────
+async function startDeploy() {
+  const html = document.getElementById('html-input').value.trim();
+  const name = document.getElementById('proj-name').value.trim() || 'meu-site';
+
+  if (!html && !uploadedFiles) {
+    showError('Cole algum HTML ou faça upload de um arquivo primeiro.');
+    return;
+  }
+
+  hideError();
+  showProcessing();
+
+  try {
+    let response;
+
+    if (uploadedFiles && uploadedFiles.length > 0) {
+      // Upload via FormData (suporta ZIP e múltiplos arquivos)
+      const form = new FormData();
+      form.append('name', name);
+      Array.from(uploadedFiles).forEach(f => form.append('files', f));
+      response = await fetch(`${API_BASE}/deploy`, { method: 'POST', body: form });
+    } else {
+      // Deploy via JSON (HTML colado)
+      response = await fetch(`${API_BASE}/deploy/html`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, html }),
+      });
+    }
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+      throw new Error(err.error || `HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    hideProcessing();
+    showSuccess(data.project);
+    loadProjectCount();
+    showToast('Site publicado com sucesso!', 'green');
+  } catch (err) {
+    hideProcessing();
+    showError('Erro ao publicar: ' + err.message);
+    showToast('Falha no deploy', 'red');
+  }
+}
+
+// ── Processing animation ──────────────────────────────────
+let procInterval = null;
+function showProcessing() {
+  const modal = document.getElementById('processing-modal');
+  const steps = modal.querySelectorAll('.step-item');
+  steps.forEach(s => { s.classList.remove('active', 'done'); s.querySelector('.step-icon').textContent = '•'; });
+  modal.classList.add('visible');
+  document.getElementById('deploy-btn').disabled = true;
+
+  let i = 0;
+  function next() {
+    if (i > 0) {
+      steps[i-1].classList.remove('active');
+      steps[i-1].classList.add('done');
+      steps[i-1].querySelector('.step-icon').textContent = '✓';
+    }
+    if (i < steps.length) {
+      steps[i].classList.add('active');
+      steps[i].querySelector('.step-icon').textContent = '▶';
+      i++;
+      procInterval = setTimeout(next, 350 + Math.random() * 200);
+    }
+  }
+  next();
+}
+
+function hideProcessing() {
+  clearTimeout(procInterval);
+  document.getElementById('processing-modal').classList.remove('visible');
+  document.getElementById('deploy-btn').disabled = false;
+  const steps = document.querySelectorAll('.step-item');
+  steps.forEach(s => { s.classList.remove('active'); s.classList.add('done'); s.querySelector('.step-icon').textContent = '✓'; });
+}
+
+// ── Success card ──────────────────────────────────────────
+function showSuccess(project) {
+  const card = document.getElementById('success-card');
+  const link = document.getElementById('deployed-url-link');
+  link.href = project.url;
+  link.textContent = project.url;
+  document.getElementById('meta-size').textContent = project.size;
+  document.getElementById('meta-time').textContent = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+
+  const fixesList = document.getElementById('ai-fixes-list');
+  fixesList.innerHTML = '';
+  const fixes = project.fixes || [];
+  if (fixes.length === 0) {
+    fixesList.innerHTML = '<li class="ai-fix"><span class="fix-check">✓</span>HTML perfeito — nenhuma correção necessária</li>';
+  } else {
+    fixes.forEach(fix => {
+      const li = document.createElement('li');
+      li.className = 'ai-fix';
+      li.innerHTML = `<span class="fix-check">✓</span>${fix}`;
+      fixesList.appendChild(li);
+    });
+  }
+
+  card.classList.add('visible');
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function copyUrl() {
+  const url = document.getElementById('deployed-url-link').href;
+  navigator.clipboard.writeText(url).catch(() => {});
+  showToast('URL copiada!', 'green');
+}
+
+// ── Preview ───────────────────────────────────────────────
+function previewDirect() {
+  const html = document.getElementById('html-input').value.trim();
+  if (!html) { showToast('Nada para pré-visualizar', 'amber'); return; }
+  const blob = new Blob([html], { type: 'text/html' });
+  document.getElementById('preview-url-text').textContent = 'pré-visualização local (não publicado)';
+  document.getElementById('preview-frame').src = URL.createObjectURL(blob);
+  document.getElementById('preview-modal').classList.add('visible');
+}
+
+function openPreview(url) {
+  document.getElementById('preview-url-text').textContent = url;
+  document.getElementById('preview-frame').src = url;
+  document.getElementById('preview-modal').classList.add('visible');
+}
+
+function closePreview() {
+  document.getElementById('preview-modal').classList.remove('visible');
+  document.getElementById('preview-frame').src = '';
+}
+
+// ── Load projects ─────────────────────────────────────────
+async function loadProjects() {
+  const grid = document.getElementById('projects-grid');
+  grid.innerHTML = '<div style="color:var(--text-3);font-size:13px;padding:40px;text-align:center">Carregando projetos...</div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/deploy`);
+    const data = await res.json();
+    const projects = data.projects || [];
+    renderProjects(projects);
+    updateStats(projects);
+    updateCount(projects.length);
+  } catch (err) {
+    grid.innerHTML = `<div style="color:var(--red);font-size:13px;padding:40px;text-align:center">Erro ao carregar projetos. Verifique se o servidor está rodando.</div>`;
+  }
+}
+
+function renderProjects(projects) {
+  const grid = document.getElementById('projects-grid');
+  if (!projects.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🌐</div>
+      <h3>Nenhum projeto ainda</h3>
+      <p>Faça seu primeiro deploy e ele aparecerá aqui.</p>
+      <button class="btn btn-primary" onclick="showPage('upload')">🚀 Fazer primeiro deploy</button>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = '';
+  projects.forEach(proj => {
+    const date = new Date(proj.createdAt).toLocaleDateString('pt-BR');
+    const card = document.createElement('div');
+    card.className = 'project-card';
+    card.innerHTML = `
+      <div class="project-preview" onclick="openPreview('${proj.url}')">
+        <div class="preview-icon">🌐</div>
+        <div class="preview-slug">${proj.slug}</div>
+        <div class="preview-badge">HTML</div>
+      </div>
+      <div class="project-info">
+        <div class="project-name-row">
+          ${escHtml(proj.name)}
+          <span class="live-badge">● live</span>
+        </div>
+        <a class="project-url-link" href="${proj.url}" target="_blank">${proj.url}</a>
+        <div class="project-footer">
+          <span class="project-date">${date}</span>
+          <div class="project-actions">
+            <button class="icon-btn" title="Preview" onclick="openPreview('${proj.url}')">👁</button>
+            <button class="icon-btn" title="Copiar URL" onclick="copyText('${proj.url}')">🔗</button>
+            <button class="icon-btn danger" title="Deletar" onclick="deleteProject('${proj.id}')">🗑</button>
+          </div>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function updateStats(projects) {
+  document.getElementById('stat-total').textContent = projects.length;
+  document.getElementById('stat-live').textContent = projects.length;
+  const fixes = projects.reduce((a, p) => a + (p.fixes?.length || 0), 0);
+  document.getElementById('stat-fixes').textContent = fixes;
+  document.getElementById('stat-storage').textContent = projects.length > 0 ? projects[0].size || '—' : '0 B';
+}
+
+async function loadProjectCount() {
+  try {
+    const res = await fetch(`${API_BASE}/deploy`);
+    const data = await res.json();
+    updateCount((data.projects || []).length);
+  } catch {}
+}
+
+function updateCount(n) {
+  document.getElementById('proj-count').textContent = n + ' site' + (n !== 1 ? 's' : '');
+}
+
+async function deleteProject(id) {
+  if (!confirm('Deletar este projeto permanentemente?')) return;
+  try {
+    const res = await fetch(`${API_BASE}/deploy/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Erro ao deletar');
+    showToast('Projeto removido', 'red');
+    loadProjects();
+    loadProjectCount();
+  } catch (err) {
+    showToast('Erro ao deletar: ' + err.message, 'red');
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function showToast(msg, color = 'green') {
+  const colors = { green: 'var(--green)', red: 'var(--red)', amber: 'var(--amber)' };
+  document.getElementById('toast-icon').style.background = colors[color] || colors.green;
+  document.getElementById('toast-msg').textContent = msg;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function showError(msg) {
+  const b = document.getElementById('error-banner');
+  b.textContent = '⚠ ' + msg;
+  b.classList.add('visible');
+}
+function hideError() { document.getElementById('error-banner').classList.remove('visible'); }
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).catch(() => {});
+  showToast('Copiado!', 'green');
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Init ──────────────────────────────────────────────────
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
+loadProjectCount();
+</script>
+</body>
+</html>
